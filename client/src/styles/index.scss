@@ -1,0 +1,19 @@
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+html {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #f1f1f1;
+  margin: 0;
+  font-family: 'Arial';
+  font-weight: lighter;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #dc3d4b;
+}
