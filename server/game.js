@@ -4,7 +4,7 @@ class Game {
     this.current_turn = 0;
     this.timeOut;
     this._turn = 0;
-    this.MAX_WAITING = 10000;
+    this.MAX_WAITING = 60000;
     this.firstTime = true;
     this.votedPlayers = [];
   }

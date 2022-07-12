@@ -11,6 +11,8 @@ import { loadUserInformation } from './services/authentication';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
+import ProfileEditPage from './pages/ProfileEditPage';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -20,14 +22,16 @@ const App = () => {
     loadUserInformation().then((data) => {
       setUser(data.user);
     });
+  }, []);
 
+  useEffect(() => {
     const newSocket = socketio(process.env.REACT_APP_REST_API_URL, {
       withCredentials: true
     });
 
     setSocket(newSocket);
 
-    return socket?.disconnet();
+    return () => socket?.disconnect();
   }, []);
 
   return (
@@ -39,9 +43,9 @@ const App = () => {
             <Route path='/' element={<HomePage />} />
             <Route path='/register' element={<RegisterPage />} />
             <Route path='/log-in' element={<LoginPage />} />
-            {/* <Route path='/theme/create' element={<AddThemePage />} />
-            <Route path='/profile/edit' element={<ProfileEditPage />} />
             <Route path='/profile/:id' element={<ProfilePage />} />
+            <Route path='/profile/edit' element={<ProfileEditPage />} />
+            {/* <Route path='/theme/create' element={<AddThemePage />} />
             <Route path='/room/:code' element={<GameController />} /> */}
           </Routes>
         </BrowserRouter>
