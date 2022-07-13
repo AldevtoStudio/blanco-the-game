@@ -97,8 +97,6 @@ const setSockets = (io) => {
           return Promise.all(promises);
         })
         .then((rooms) => {
-          console.log('All rooms updated');
-
           rooms.forEach((room) => {
             // Send update playerList event.
             io.to(room.code).emit('update_player_list', {

@@ -31,12 +31,6 @@ const schema = new mongoose.Schema({
     type: String,
     default: 'English'
   },
-  //link to external Chats like Discord
-  externalCom: [
-    {
-      type: String
-    }
-  ],
   currentPlayers: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -44,10 +38,6 @@ const schema = new mongoose.Schema({
     }
   ],
   blancoUser: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  currentTypingUser: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
@@ -61,7 +51,7 @@ const schema = new mongoose.Schema({
     minPlayers: { type: Number, min: 4, max: 12, default: 6 },
     changeTheme: { type: Boolean, default: false },
     hideUserNames: { type: Boolean, default: false },
-    anonymousRounds: { type: Boolean, default: false }
+    anonymousVotes: { type: Boolean, default: false }
   }
 });
 

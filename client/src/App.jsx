@@ -13,6 +13,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import ProfileEditPage from './pages/ProfileEditPage';
+import GameController from './pages/Game/GameController';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -32,7 +33,7 @@ const App = () => {
     setSocket(newSocket);
 
     return () => socket?.disconnect();
-  }, []);
+  }, [user]);
 
   return (
     <AuthenticationContext.Provider value={{ user, setUser }}>
@@ -45,8 +46,8 @@ const App = () => {
             <Route path='/log-in' element={<LoginPage />} />
             <Route path='/profile/:id' element={<ProfilePage />} />
             <Route path='/profile/edit' element={<ProfileEditPage />} />
-            {/* <Route path='/theme/create' element={<AddThemePage />} />
-            <Route path='/room/:code' element={<GameController />} /> */}
+            <Route path='/room/:code' element={<GameController />} />
+            {/* <Route path='/theme/create' element={<AddThemePage />} /> */}
           </Routes>
         </BrowserRouter>
       </SocketContext.Provider>
