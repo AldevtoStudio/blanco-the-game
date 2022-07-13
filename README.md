@@ -4,7 +4,7 @@ Full-stack application project with Node, React, Mongoose, Socket.io and more te
 
 ## About
 
-Blanco is an online game were you can play with your friends.
+Blanco is an online game where you can play with your friends.
 
 One person is choosen as "Blanco" but no one knows who is, then all rest of players get the same theme, for example "Spanish food". At the start of each round each player says something related to the theme, when all players have said something, they vote to find the "Blanco" one. The game consists on finding the "Blanco" player, and if you're tagged as "Blanco" you need to survive all rounds trying to guess the theme based on the related words written by other players and write one you think is related to the theme.
 
