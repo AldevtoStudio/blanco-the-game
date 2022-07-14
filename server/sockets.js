@@ -1,26 +1,36 @@
 const debug = require('debug')('blanco-server:socketio');
 const Room = require('./models/room');
-const Game = require('./game');
+const Game = require('./game/game');
+const BlancoGame = new Game();
 
 const setSockets = (io) => {
-  let BlancoGame = new Game();
-
   io.on('connection', (socket) => {
     const { user } = socket.request;
+    let blancoRoom;
     debug(`Client with ID: ${socket.id} connected`);
 
     // PASS TURN EVENT
     socket.on('pass_turn', () => {
-      if (BlancoGame.players[BlancoGame._turn] !== socket) return;
+      if (blancoRoom.players[blancoRoom._turn] !== socket) return;
 
       console.log('Next turn triggered');
 
-      BlancoGame.resetTimeOut();
-      BlancoGame.nextTurn();
+      blancoRoom.resetTimeOut();
+      blancoRoom.nextTurn();
+    });
+
+    socket.on('create_room', (data) => {
+      BlancoGame.createRoom(data);
     });
 
     socket.on('join_room', (data) => {
       const { code } = data;
+
+      BlancoGame.rooms.map((room) => {
+        if (room.getCode() !== code) return;
+
+        blancoRoom = room;
+      });
 
       leaveAllRooms(user?._id)
         .then(() => {
@@ -39,7 +49,7 @@ const setSockets = (io) => {
         })
         .then((room) => {
           socket.join(code);
-          BlancoGame.addPlayer(socket);
+          blancoRoom.addPlayer(socket);
           debug(`${user.name} connected to ${room.name}'s room.`);
 
           // Send update playerList event.
@@ -54,6 +64,12 @@ const setSockets = (io) => {
     socket.on('leave_room', (data) => {
       const { code } = data;
 
+      BlancoGame.rooms.map((room) => {
+        if (room.getCode() !== code) return;
+
+        blancoRoom = room;
+      });
+
       Room.findOneAndUpdate(
         { code },
         { $pull: { currentPlayers: user._id } },
@@ -61,9 +77,8 @@ const setSockets = (io) => {
       )
         .populate('currentPlayers')
         .then((room) => {
-          console.log('Room updated');
-
-          BlancoGame.removePlayer(socket);
+          blancoRoom.removePlayer(socket);
+          debug(`${user.name} left ${room.name}'s room.`);
 
           // Send update playerList event.
           io.to(code).emit('update_player_list', {
@@ -101,6 +116,12 @@ const setSockets = (io) => {
             // Send update playerList event.
             io.to(room.code).emit('update_player_list', {
               currentPlayers: room.currentPlayers
+            });
+
+            BlancoGame.rooms.map((_room) => {
+              if (_room.getCode() !== room.code) return;
+
+              _room.removePlayer(socket);
             });
           });
         })

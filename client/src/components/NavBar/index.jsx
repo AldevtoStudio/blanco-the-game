@@ -23,7 +23,6 @@ const NavBar = () => {
         <>
           <div>
             <Link to={`/profile/${user._id}`}>Profile</Link>
-            <Link to={`/room/vlx3v`}>TEST ROOM</Link>
             <button onClick={handleSignOut}>Log Out</button>
           </div>
         </>

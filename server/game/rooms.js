@@ -1,5 +1,6 @@
-class Game {
-  constructor() {
+class BlancoRoom {
+  constructor(code) {
+    this.code = code;
     this.players = [];
     this.current_turn = 0;
     this.timeOut;
@@ -8,6 +9,10 @@ class Game {
     this.firstTime = true;
     this.votedPlayers = [];
   }
+
+  getCode = () => {
+    return this.code;
+  };
 
   voteForPlayer = (socket) => {
     this.votedPlayers.push(socket);
@@ -93,4 +98,4 @@ class Game {
   };
 }
 
-module.exports = Game;
+module.exports = BlancoRoom;

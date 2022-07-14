@@ -1,8 +1,14 @@
-import React from 'react';
+import RoomList from '../../components/RoomList';
+import CreateRoomForm from './../../components/CreateRoomForm';
 import './HomePage.scss';
 
 const HomePage = () => {
-  return <div>HomePage</div>;
+  return (
+    <div>
+      <CreateRoomForm />
+      <RoomList />
+    </div>
+  );
 };
 
 export default HomePage;

@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const http = require('http');
 const app = require('./app');
 const setSocketIO = require('./config/socketio');
+const Room = require('./models/room');
 
 const PORT = Number(process.env.PORT, 10);
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -50,6 +51,9 @@ const onListening = (server) => {
   debug(`Node server listening on ${port}`);
   if (process.env.NODE_ENV === 'development')
     debug(`Visit http://localhost:${port} to develop your app`);
+
+  // Cleanning room collection.
+  Room.collection.drop();
 };
 
 const initiate = () => {
