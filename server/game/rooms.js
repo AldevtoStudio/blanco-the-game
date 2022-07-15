@@ -8,6 +8,7 @@ class BlancoRoom {
     this.MAX_WAITING = 60000;
     this.firstTime = true;
     this.votedPlayers = [];
+    this.isPlaying = false;
   }
 
   getCode = () => {
@@ -19,12 +20,13 @@ class BlancoRoom {
   };
 
   checkMostVotedPlayer = () => {
-    if (!this.votedPlayers) return;
+    if (!this.votedPlayers) {
+      // Send no one eliminated.
+      return;
+    }
 
     let mostVotedPlayer = this.getMostRepeated();
-
     mostVotedPlayer.emit('set_spectator');
-    console.log('Set spectator');
 
     this.votedPlayers = [];
   };
@@ -86,7 +88,8 @@ class BlancoRoom {
 
   $triggerTimeout = () => {
     this.timeOut = setTimeout(() => {
-      this.nextTurn();
+      if (this.isPlaying) this.nextTurn();
+      else this.$triggerTimeout();
     }, this.MAX_WAITING);
   };
 

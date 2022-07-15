@@ -1,10 +1,13 @@
 import { useContext, useState } from 'react';
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getRoomByCode } from '../../services/room';
+import { getRoomByCode, updateRoomByCode } from '../../services/room';
 import SocketContext from '../../context/socket';
 import AuthenticationContext from '../../context/authentication';
+
 import Lobby from './Lobby';
+import Starting from './Starting';
+import Playing from './Playing';
 
 const GameController = () => {
   const { code } = useParams();
@@ -28,10 +31,8 @@ const GameController = () => {
   // Set the room and isAdmin states.
   useEffect(() => {
     getRoomByCode(code).then((data) => {
-      const { room } = data;
-
-      setRoom(room);
-      setIsAdmin(user?._id === room.admin);
+      setRoom(data.room);
+      setIsAdmin(user?._id === data.room.admin);
     });
   }, [code, user]);
 
@@ -44,15 +45,47 @@ const GameController = () => {
       setRoom({ ...room, currentPlayers });
     });
 
+    socket?.on('room_updated_server', (data) => {
+      const { status, currentTheme, blancoUser } = data;
+
+      setRoom({ ...room, status, currentTheme, blancoUser });
+    });
+
     return () => {
       socket?.off('update_player_list');
     };
   }, [room, socket]);
 
+  // Update room status.
+  const updateRoomStatus = (newStatus, newTheme, newBlancoUser) => {
+    if (!isAdmin) return;
+
+    updateRoomByCode(code, {
+      ...room,
+      currentTheme: newTheme,
+      blancoUser: newBlancoUser,
+      status: newStatus
+    }).then((data) => {
+      setRoom(data.room);
+      socket.emit('room_updated', { room: data.room });
+    });
+  };
+
   // Display corresponding game page based on 'room.status'.
   switch (room?.status) {
     case 'WAITING':
-      return <Lobby room={room} setRoom={setRoom} isAdmin={isAdmin} />;
+      return <Lobby room={room} setRoom={setRoom} isAdmin={isAdmin} onStart={updateRoomStatus} />;
+    case 'STARTING':
+      return (
+        <Starting
+          room={room}
+          setRoom={setRoom}
+          isAdmin={isAdmin}
+          onCountdownEnd={updateRoomStatus}
+        />
+      );
+    case 'PLAYING':
+      return <Playing room={room} />;
 
     default:
       return <div>Loading...</div>;

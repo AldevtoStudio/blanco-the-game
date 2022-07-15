@@ -19,6 +19,19 @@ const setSockets = (io) => {
       blancoRoom.nextTurn();
     });
 
+    socket.on('room_updated', (data) => {
+      const { room } = data;
+
+      if (room.status === 'PLAYING') blancoRoom.isPlaying = true;
+      else blancoRoom.isPlaying = false;
+
+      io.to(room.code).emit('room_updated_server', {
+        status: room.status,
+        currentTheme: room.currentTheme,
+        blancoUser: room.blancoUser
+      });
+    });
+
     socket.on('create_room', (data) => {
       BlancoGame.createRoom(data);
     });
