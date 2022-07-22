@@ -1,6 +1,7 @@
 class BlancoRoom {
-  constructor(code) {
+  constructor(code, io) {
     this.code = code;
+    this.io = io;
     this.players = [];
     this.current_turn = 0;
     this.timeOut;
@@ -9,10 +10,20 @@ class BlancoRoom {
     this.firstTime = true;
     this.votedPlayers = [];
     this.isPlaying = false;
+    this.wordsCount = 0;
   }
 
   getCode = () => {
     return this.code;
+  };
+
+  addWord = () => {
+    this.wordsCount++;
+    console.log(this.wordsCount);
+  };
+
+  resetWords = () => {
+    this.wordsCount = 0;
   };
 
   voteForPlayer = (socket) => {
@@ -64,25 +75,25 @@ class BlancoRoom {
     this._turn--;
   };
 
-  $removeTurn = (socket) => {
-    socket.emit('remove_turn');
-  };
-
   nextTurn = () => {
     this._turn = this.current_turn++ % this.players.length;
 
     let currentPlayer = this.players[this._turn];
 
-    this.players
-      .filter((player) => player != currentPlayer)
-      .map((player) => {
-        this.$removeTurn(player);
+    if (this.wordsCount === this.players.length) {
+      this.io.to(this.code).emit('set_turn', {
+        socketId: 'NULL'
       });
-    console.log('Sent remove turn');
 
-    currentPlayer?.emit('your_turn');
+      setTimeout(() => this.io.to(this.code).emit('change_to_voting'), 3000);
+    } else {
+      this.io.to(this.code).emit('set_turn', {
+        socketId: currentPlayer.id
+      });
+    }
 
     console.log(`Next turn triggered ${this._turn}`);
+
     this.$triggerTimeout();
   };
 

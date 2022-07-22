@@ -1,11 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import AuthenticationContext from '../../../context/authentication.js';
 import './Starting.scss';
 
 const Starting = (props) => {
-  const { room, setRoom, isAdmin, onCountdownEnd } = props;
-  const { code } = useParams();
+  const { room, isAdmin, onCountdownEnd } = props;
 
   const { user } = useContext(AuthenticationContext);
 
@@ -15,7 +13,7 @@ const Starting = (props) => {
   useEffect(() => {
     const timer = counter > 0 && setInterval(() => setCounter(counter - 1), 1000);
 
-    if (counter === 0) onCountdownEnd('PLAYING');
+    if (counter === 0 && isAdmin) onCountdownEnd('PLAYING');
 
     return () => clearInterval(timer);
   }, [counter]);

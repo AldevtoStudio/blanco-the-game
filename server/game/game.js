@@ -5,10 +5,10 @@ class Game {
     this.rooms = [];
   }
 
-  createRoom = (data) => {
+  createRoom = (data, io) => {
     const { roomData } = data;
 
-    let room = new BlancoRoom(roomData.code);
+    let room = new BlancoRoom(roomData.code, io);
 
     this.rooms.push(room);
   };

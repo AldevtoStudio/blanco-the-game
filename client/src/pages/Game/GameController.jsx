@@ -8,6 +8,7 @@ import AuthenticationContext from '../../context/authentication';
 import Lobby from './Lobby';
 import Starting from './Starting';
 import Playing from './Playing';
+import Voting from './Voting';
 
 const GameController = () => {
   const { code } = useParams();
@@ -17,6 +18,7 @@ const GameController = () => {
 
   const [room, setRoom] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [words, setWords] = useState([]);
 
   // Send 'join_room' event when joining a room.
   // Send 'leave_room' event when navigating, refreshing or closing the page.
@@ -56,17 +58,39 @@ const GameController = () => {
     };
   }, [room, socket]);
 
+  // Set words list.
+  useEffect(() => {
+    socket?.on('new_word', (data) => {
+      const { text, sender } = data;
+
+      let newWord = { text, sender };
+
+      setWords([...words, newWord]);
+    });
+
+    return () => {
+      socket?.off('new_word');
+    };
+  }, [socket, words]);
+
   // Update room status.
   const updateRoomStatus = (newStatus, newTheme, newBlancoUser) => {
     if (!isAdmin) return;
 
     updateRoomByCode(code, {
       ...room,
-      currentTheme: newTheme,
-      blancoUser: newBlancoUser,
+      currentTheme: newTheme ? newTheme : room.currentTheme,
+      blancoUser: newBlancoUser ? newBlancoUser : room.blancoUser,
       status: newStatus
     }).then((data) => {
       setRoom(data.room);
+
+      // Reset words array.
+      if (data.room.status === 'ENDING') {
+        socket?.emit('reset_words', { code });
+        setWords([]);
+      }
+
       socket.emit('room_updated', { room: data.room });
     });
   };
@@ -76,16 +100,11 @@ const GameController = () => {
     case 'WAITING':
       return <Lobby room={room} setRoom={setRoom} isAdmin={isAdmin} onStart={updateRoomStatus} />;
     case 'STARTING':
-      return (
-        <Starting
-          room={room}
-          setRoom={setRoom}
-          isAdmin={isAdmin}
-          onCountdownEnd={updateRoomStatus}
-        />
-      );
+      return <Starting room={room} isAdmin={isAdmin} onCountdownEnd={updateRoomStatus} />;
     case 'PLAYING':
-      return <Playing room={room} />;
+      return <Playing room={room} words={words} onAllWordsSent={updateRoomStatus} />;
+    case 'VOTING':
+      return <Voting />;
 
     default:
       return <div>Loading...</div>;

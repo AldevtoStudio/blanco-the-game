@@ -13,7 +13,7 @@ const setSockets = (io) => {
     socket.on('pass_turn', () => {
       if (blancoRoom.players[blancoRoom._turn] !== socket) return;
 
-      console.log('Next turn triggered');
+      console.log('Next turn triggered.');
 
       blancoRoom.resetTimeOut();
       blancoRoom.nextTurn();
@@ -22,8 +22,15 @@ const setSockets = (io) => {
     socket.on('room_updated', (data) => {
       const { room } = data;
 
-      if (room.status === 'PLAYING') blancoRoom.isPlaying = true;
-      else blancoRoom.isPlaying = false;
+      if (room.status === 'PLAYING') {
+        // Start turn system.
+        blancoRoom.isPlaying = true;
+
+        blancoRoom.resetTimeOut();
+        blancoRoom.nextTurn();
+
+        console.log('Turn system started.');
+      } else blancoRoom.isPlaying = false;
 
       io.to(room.code).emit('room_updated_server', {
         status: room.status,
@@ -33,7 +40,36 @@ const setSockets = (io) => {
     });
 
     socket.on('create_room', (data) => {
-      BlancoGame.createRoom(data);
+      BlancoGame.createRoom(data, io);
+    });
+
+    socket.on('send_word', (data) => {
+      const { text, sender, roomCode } = data;
+
+      BlancoGame.rooms.map((room) => {
+        if (room.getCode() !== roomCode) return;
+
+        blancoRoom = room;
+      });
+
+      blancoRoom?.addWord();
+
+      io.to(roomCode).emit('new_word', {
+        text,
+        sender
+      });
+    });
+
+    socket.on('reset_words', (data) => {
+      const { code } = data;
+
+      BlancoGame.rooms.map((room) => {
+        if (room.getCode() !== code) return;
+
+        blancoRoom = room;
+      });
+
+      blancoRoom.resetWords();
     });
 
     socket.on('join_room', (data) => {
