@@ -26,44 +26,6 @@ class BlancoRoom {
     this.wordsCount = 0;
   };
 
-  voteForPlayer = (socket) => {
-    this.votedPlayers.push(socket);
-  };
-
-  checkMostVotedPlayer = () => {
-    if (!this.votedPlayers) {
-      // Send no one eliminated.
-      return;
-    }
-
-    let mostVotedPlayer = this.getMostRepeated();
-    mostVotedPlayer.emit('set_spectator');
-
-    this.votedPlayers = [];
-  };
-
-  getMostRepeated = () => {
-    if (this.votedPlayers.length === 1) return this.votedPlayers[0];
-
-    this.votedPlayers.sort();
-
-    let max = 0,
-      result,
-      freq = 0;
-
-    for (let i = 0; i < this.votedPlayers.length; i++) {
-      if (this.votedPlayers[i] === this.votedPlayers[i + 1]) freq++;
-      else freq = 0;
-
-      if (freq > max) {
-        result = this.votedPlayers[i];
-        max = freq;
-      }
-    }
-
-    return result;
-  };
-
   addPlayer = (socket) => {
     if (!this.players.includes(socket)) this.players.push(socket);
   };
@@ -80,19 +42,35 @@ class BlancoRoom {
 
     let currentPlayer = this.players[this._turn];
 
+    // Check if all players sent their related word.
     if (this.wordsCount === this.players.length) {
       this.io.to(this.code).emit('set_turn', {
         socketId: 'NULL'
       });
 
       setTimeout(() => this.io.to(this.code).emit('change_to_voting'), 3000);
-    } else {
+    }
+
+    // Check if all players voted.
+    if (this.votedPlayers.length === this.players.length) {
+      this.io.to(this.code).emit('set_turn', {
+        socketId: 'NULL'
+      });
+
+      setTimeout(() => this.io.to(this.code).emit('change_to_ending'), 3000);
+    }
+
+    // If no wordsCount or votedPlayers, means we are playing, so we trigger the next turn.
+    if (
+      this.wordsCount <= this.players.length ||
+      this.votedPlayers.length <= this.players.length
+    ) {
       this.io.to(this.code).emit('set_turn', {
         socketId: currentPlayer.id
       });
-    }
 
-    console.log(`Next turn triggered ${this._turn}`);
+      console.log(`Next turn triggered ${this._turn}`);
+    }
 
     this.$triggerTimeout();
   };

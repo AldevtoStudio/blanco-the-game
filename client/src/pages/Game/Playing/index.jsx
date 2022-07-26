@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import './Playing.scss';
 
 const Playing = (props) => {
-  const { room, words, onAllWordsSent } = props;
+  const { room, words, onAllWordsSent, isAdmin } = props;
   const { code } = useParams();
 
   const socket = useContext(SocketContext);
@@ -24,11 +24,14 @@ const Playing = (props) => {
     });
 
     socket?.on('change_to_voting', () => {
+      if (!isAdmin) return;
+
       onAllWordsSent('VOTING');
     });
 
     return () => {
       socket?.off('set_turn');
+      socket?.off('change_to_voting');
     };
   }, [socket]);
 

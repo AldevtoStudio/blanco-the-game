@@ -55,6 +55,7 @@ const GameController = () => {
 
     return () => {
       socket?.off('update_player_list');
+      socket?.off('room_updated_server');
     };
   }, [room, socket]);
 
@@ -102,9 +103,11 @@ const GameController = () => {
     case 'STARTING':
       return <Starting room={room} isAdmin={isAdmin} onCountdownEnd={updateRoomStatus} />;
     case 'PLAYING':
-      return <Playing room={room} words={words} onAllWordsSent={updateRoomStatus} />;
+      return (
+        <Playing room={room} words={words} onAllWordsSent={updateRoomStatus} isAdmin={isAdmin} />
+      );
     case 'VOTING':
-      return <Voting />;
+      return <Voting room={room} isAdmin={isAdmin} onEnding={updateRoomStatus} />;
 
     default:
       return <div>Loading...</div>;

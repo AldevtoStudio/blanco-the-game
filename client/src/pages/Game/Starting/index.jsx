@@ -9,7 +9,6 @@ const Starting = (props) => {
 
   const [counter, setCounter] = useState(10);
 
-  // Third Attempts
   useEffect(() => {
     const timer = counter > 0 && setInterval(() => setCounter(counter - 1), 1000);
 
