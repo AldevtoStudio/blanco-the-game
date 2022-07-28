@@ -19,6 +19,7 @@ const GameController = () => {
   const [room, setRoom] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [words, setWords] = useState([]);
+  const [votedPlayers, setVotedPlayers] = useState([]);
 
   // Send 'join_room' event when joining a room.
   // Send 'leave_room' event when navigating, refreshing or closing the page.
@@ -74,6 +75,19 @@ const GameController = () => {
     };
   }, [socket, words]);
 
+  // Set votedPlayers list.
+  useEffect(() => {
+    socket?.on('new_votedPlayer', (data) => {
+      const { votedPlayer, votedBy, word } = data;
+
+      let newVotedPlayer = { votedPlayer, votedBy, word };
+
+      console.log(`Player: ${votedPlayer.name} was voted!`);
+
+      setVotedPlayers([...votedPlayers, newVotedPlayer]);
+    });
+  }, [socket, votedPlayers]);
+
   // Update room status.
   const updateRoomStatus = (newStatus, newTheme, newBlancoUser) => {
     if (!isAdmin) return;
@@ -107,7 +121,16 @@ const GameController = () => {
         <Playing room={room} words={words} onAllWordsSent={updateRoomStatus} isAdmin={isAdmin} />
       );
     case 'VOTING':
-      return <Voting room={room} isAdmin={isAdmin} onEnding={updateRoomStatus} />;
+      return (
+        <Voting
+          room={room}
+          isAdmin={isAdmin}
+          onEnding={updateRoomStatus}
+          votedPlayers={votedPlayers}
+          setVotedPlayers={setVotedPlayers}
+          words={words}
+        />
+      );
 
     default:
       return <div>Loading...</div>;

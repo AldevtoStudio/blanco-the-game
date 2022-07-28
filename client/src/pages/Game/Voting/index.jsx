@@ -1,18 +1,21 @@
 import { useContext, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import AuthenticationContext from '../../../context/authentication';
 import SocketContext from '../../../context/socket';
 import './Voting.scss';
 
 const Voting = (props) => {
-  const { room, isAdmin, onEnding } = props;
+  const { room, isAdmin, onEnding, votedPlayers, setVotedPlayers, words } = props;
+  const { code } = useParams();
 
   const socket = useContext(SocketContext);
+  const { user } = useContext(AuthenticationContext);
 
   const [counter, setCounter] = useState(room.settings.votingTime);
 
   useEffect(() => {
     const timer = counter > 0 && setInterval(() => setCounter(counter - 1), 1000);
 
-    // TEST: Go to ending view if voting time is over.
     if (counter === 0 && isAdmin) onEnding('ENDING');
 
     return () => clearInterval(timer);
@@ -31,23 +34,38 @@ const Voting = (props) => {
     };
   }, []);
 
-  // TODO: VOTED PLAYERS STATE (but in GameController, not here).
-  //
-  // TODO: Send voted user with the related word voted data.
-  const handleVote = () => {
-    /* Data should look like: 
-    let newVotedPlayer = {
-      votedPlayer: { name: votedPlayer.name, picture: votedPlayer.picture, _id: votedPlayer._id }
+  // Send voted user with the related word voted data.
+  const handleVote = (word) => {
+    const { text, sender } = word;
+
+    console.log(`Player: ${sender.name} voted!`);
+
+    socket?.emit('send_votedPlayer', {
+      votedPlayer: sender,
       votedBy: { name: user.name, picture: user.picture, _id: user._id },
-      word (word from words with sender and votedPlayer being the same): word.text
-    } */
-    //
-    // Send newVotedPlayer to server so we can relay data to other clients.
-    //
-    // setVotedPlayers([...votedPlayers, newVotedPlayer]);
+      word: text,
+      roomCode: code
+    });
   };
 
-  return <div>Voting | Time left: {counter}</div>;
+  const listWords = () => {
+    return words.map((word) => {
+      return (
+        <div key={word.sender._id}>
+          <p>{word.text}</p>
+          <b>By: {word.sender.name}</b>
+          <button onClick={() => handleVote(word)}>Vote</button>
+        </div>
+      );
+    });
+  };
+
+  return (
+    <div>
+      Voting | Time left: {counter}
+      <div>{listWords()}</div>
+    </div>
+  );
 };
 
 export default Voting;

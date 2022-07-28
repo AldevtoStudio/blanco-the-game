@@ -19,7 +19,16 @@ class BlancoRoom {
 
   addWord = () => {
     this.wordsCount++;
-    console.log(this.wordsCount);
+  };
+
+  addVotedPlayer = (player, socket) => {
+    let newPlayer = { ...player, socket };
+
+    this.votedPlayers.push(newPlayer);
+  };
+
+  resetVotedPlayers = () => {
+    this.votedPlayers = [];
   };
 
   resetWords = () => {

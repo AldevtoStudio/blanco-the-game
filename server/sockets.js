@@ -72,6 +72,34 @@ const setSockets = (io) => {
       blancoRoom.resetWords();
     });
 
+    socket.on('send_votedPlayer', (data) => {
+      const { votedPlayer, votedBy, word, roomCode } = data;
+
+      BlancoGame.rooms.map((room) => {
+        if (room.getCode() !== roomCode) return;
+
+        blancoRoom = room;
+      });
+
+      let newVotedPlayer = { votedPlayer, votedBy, word };
+
+      blancoRoom?.addVotedPlayer(newVotedPlayer, socket);
+
+      io.to(roomCode).emit('new_votedPlayer', newVotedPlayer);
+    });
+
+    socket.on('reset_votedPlayers', (data) => {
+      const { code } = data;
+
+      BlancoGame.rooms.map((room) => {
+        if (room.getCode() !== code) return;
+
+        blancoRoom = room;
+      });
+
+      blancoRoom.resetVotedPlayers();
+    });
+
     socket.on('join_room', (data) => {
       const { code } = data;
 
