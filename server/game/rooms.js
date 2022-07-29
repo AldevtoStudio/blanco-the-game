@@ -1,3 +1,5 @@
+const Room = require('../models/room');
+
 class BlancoRoom {
   constructor(code, io) {
     this.code = code;
@@ -21,6 +23,10 @@ class BlancoRoom {
     this.wordsCount++;
   };
 
+  resetWords = () => {
+    this.wordsCount = 0;
+  };
+
   addVotedPlayer = (player, socket) => {
     let newPlayer = { ...player, socket };
 
@@ -29,10 +35,6 @@ class BlancoRoom {
 
   resetVotedPlayers = () => {
     this.votedPlayers = [];
-  };
-
-  resetWords = () => {
-    this.wordsCount = 0;
   };
 
   addPlayer = (socket) => {

@@ -22,15 +22,22 @@ const setSockets = (io) => {
     socket.on('room_updated', (data) => {
       const { room } = data;
 
+      console.log(room.status);
+
       if (room.status === 'PLAYING') {
         // Start turn system.
         blancoRoom.isPlaying = true;
+
+        console.log('Playing');
 
         blancoRoom.resetTimeOut();
         blancoRoom.nextTurn();
 
         console.log('Turn system started.');
-      } else blancoRoom.isPlaying = false;
+      } else {
+        blancoRoom.isPlaying = false;
+        console.log('NOT Playing');
+      }
 
       io.to(room.code).emit('room_updated_server', {
         status: room.status,
@@ -98,6 +105,30 @@ const setSockets = (io) => {
       });
 
       blancoRoom.resetVotedPlayers();
+    });
+
+    socket.on('send_end_data', (data) => {
+      const { mostVotedWord, roomCode } = data;
+
+      console.log('send_end_data');
+
+      BlancoGame.rooms.map((room) => {
+        if (room.getCode() !== roomCode) return;
+
+        blancoRoom = room;
+      });
+
+      Room.findOne({ code: blancoRoom.code })
+        .then((room) => {
+          console.log('room found');
+
+          if (String(room.blancoUser) === mostVotedWord.sender._id) {
+            io.to(roomCode).emit('end_game', { wasBlancoCaught: true });
+          } else {
+            io.to(roomCode).emit('end_game', { wasBlancoCaught: false });
+          }
+        })
+        .catch((error) => console.log(error));
     });
 
     socket.on('join_room', (data) => {

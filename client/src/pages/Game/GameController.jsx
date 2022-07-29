@@ -9,6 +9,7 @@ import Lobby from './Lobby';
 import Starting from './Starting';
 import Playing from './Playing';
 import Voting from './Voting';
+import Ending from './Ending';
 
 const GameController = () => {
   const { code } = useParams();
@@ -20,6 +21,7 @@ const GameController = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [words, setWords] = useState([]);
   const [votedPlayers, setVotedPlayers] = useState([]);
+  const [endGame, setEndGame] = useState(false);
 
   // Send 'join_room' event when joining a room.
   // Send 'leave_room' event when navigating, refreshing or closing the page.
@@ -80,13 +82,37 @@ const GameController = () => {
     socket?.on('new_votedPlayer', (data) => {
       const { votedPlayer, votedBy, word } = data;
 
+      // Create new voted player object.
       let newVotedPlayer = { votedPlayer, votedBy, word };
 
-      console.log(`Player: ${votedPlayer.name} was voted!`);
+      // Init newWord.
+      let newWord;
 
+      // Loop over each word.
+      words.forEach((word) => {
+        // Find the word connected to the voted player.
+        if (word.sender._id === newVotedPlayer.votedPlayer._id) {
+          // Add or update 'word.votes'.
+          if (word.votes)
+            newWord = { ...word, votes: word.votes + 1, votedBy: [...word.votedBy, votedBy] };
+          else newWord = { ...word, votes: 1, votedBy: [votedBy] };
+        }
+      });
+
+      // Remove duplicated words.
+      let newWords = words.filter((word) => {
+        return word.sender._id !== newVotedPlayer.votedPlayer._id;
+      });
+
+      // Update states.
+      setWords([...newWords, newWord]);
       setVotedPlayers([...votedPlayers, newVotedPlayer]);
     });
-  }, [socket, votedPlayers]);
+
+    return () => {
+      socket?.off('new_votedPlayer');
+    };
+  }, [socket, votedPlayers, words]);
 
   // Update room status.
   const updateRoomStatus = (newStatus, newTheme, newBlancoUser) => {
@@ -100,10 +126,14 @@ const GameController = () => {
     }).then((data) => {
       setRoom(data.room);
 
+      console.log(`NEW STATUS: ${newStatus}`);
+
       // Reset words array.
       if (data.room.status === 'ENDING') {
         socket?.emit('reset_words', { code });
         setWords([]);
+        socket?.emit('reset_votedPlayers', { code });
+        setVotedPlayers([]);
       }
 
       socket.emit('room_updated', { room: data.room });
@@ -126,10 +156,13 @@ const GameController = () => {
           room={room}
           isAdmin={isAdmin}
           onEnding={updateRoomStatus}
-          votedPlayers={votedPlayers}
-          setVotedPlayers={setVotedPlayers}
           words={words}
+          setEndGame={setEndGame}
         />
+      );
+    case 'ENDING':
+      return (
+        <Ending endGame={endGame} isAdmin={isAdmin} onCountdownEnd={updateRoomStatus} room={room} />
       );
 
     default:
